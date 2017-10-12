@@ -1,0 +1,208 @@
+{
+	Tables: [
+		{
+			TableName        : "e_course"
+			DDL              : [ ```
+					create table "e_course"  (		
+						  "id"					char varying (40) DEFAULT uuid_generate_v4() not null primary key
+						, "xrs_no"				char varying (50)
+						, "title"				text
+						, "user_id"				char varying (40)
+						, "updated" 			timestamp  										
+						, "created" 			timestamp default current_timestamp not null 
+					)
+				```,
+				```
+					create unique index "e_course_u1" on "e_course" ( "xrs_no" )
+				```,
+				```
+					CREATE OR REPLACE function e_course_upd()
+					RETURNS trigger AS 
+					$BODY$
+					BEGIN
+					  NEW.updated := current_timestamp;
+					  RETURN NEW;
+					END
+					$BODY$
+					LANGUAGE 'plpgsql'
+				```,
+				```
+					CREATE TRIGGER e_course_trig
+					BEFORE update ON "e_course"
+					FOR EACH ROW
+					EXECUTE PROCEDURE e_course_upd()
+				```,
+				]
+				
+		}
+		, {
+			TableName        : "e_block"
+			DDL              : [ ```
+					CREATE SEQUENCE e_seq
+					  INCREMENT 1
+					  MINVALUE 1
+					  MAXVALUE 9223372036854775807
+					  START 1
+					  CACHE 1
+				```,
+				```
+					create table "e_block"  (		
+						  "id"					char varying (40) DEFAULT uuid_generate_v4() not null primary key
+						, "course_id"			char varying (40) 
+						, "position_seq"		bigint DEFAULT nextval('e_seq'::regclass) NOT NULL 	
+						, "title"				text
+						, "n_section"			int default 0
+						, "updated" 			timestamp  										
+						, "created" 			timestamp default current_timestamp not null 
+					)
+				```,
+				```
+					CREATE OR REPLACE function e_block_upd()
+					RETURNS trigger AS 
+					$BODY$
+					BEGIN
+					  NEW.updated := current_timestamp;
+					  RETURN NEW;
+					END
+					$BODY$
+					LANGUAGE 'plpgsql'
+				```,
+				```
+					CREATE TRIGGER e_block_trig
+					BEFORE update ON "e_block"
+					FOR EACH ROW
+					EXECUTE PROCEDURE e_block_upd()
+				```,
+				]
+				
+		}
+		, {
+			TableName        : "e_section"
+			DDL              : [ ```
+					CREATE SEQUENCE e_seq
+					  INCREMENT 1
+					  MINVALUE 1
+					  MAXVALUE 9223372036854775807
+					  START 1
+					  CACHE 1
+				```,
+				```
+					create table "e_section"  (		
+						  "id"					char varying (40) DEFAULT uuid_generate_v4() not null primary key
+						, "course_id"			char varying (40) 
+						, "block_id"			char varying (40) 
+						, "position_seq"		bigint DEFAULT nextval('e_seq'::regclass) NOT NULL 	
+						, "title"				text
+						, "section_type"		char varying (20) default 'video' not null check ( "section_type" in ( 'video', 'text', 'test', 'other' ) )
+						, "video_url_json"		text
+						, "text_info_md"		text
+						, "code_sample_md"		text
+						, "updated" 			timestamp  										
+						, "created" 			timestamp default current_timestamp not null 
+					)
+				```,
+				```
+					CREATE OR REPLACE function e_section_upd()
+					RETURNS trigger AS 
+					$BODY$
+					BEGIN
+					  NEW.updated := current_timestamp;
+					  RETURN NEW;
+					END
+					$BODY$
+					LANGUAGE 'plpgsql'
+				```,
+				```
+					CREATE TRIGGER e_section_trig
+					BEFORE update ON "e_section"
+					FOR EACH ROW
+					EXECUTE PROCEDURE e_section_upd()
+				```,
+				]
+				
+		}
+		, {
+			TableName        : "e_question"
+			DDL              : [ ```
+					CREATE SEQUENCE e_seq
+					  INCREMENT 1
+					  MINVALUE 1
+					  MAXVALUE 9223372036854775807
+					  START 1
+					  CACHE 1
+				```,
+				```
+					create table "e_question"  (
+						  "id"					char varying (40) DEFAULT uuid_generate_v4() not null primary key
+						, "course_id"			char varying (40) 
+						, "section_id"			char varying (40) 
+						, "position_seq"		bigint DEFAULT nextval('e_seq'::regclass) NOT NULL 	
+						, "question_type"		char varying (20) default 'true-false' not null check ( "question_type" in ( 'true-false', 'multi-choice', 'fill-in', 'code', 'other' ) )
+						, "q_order_seq"			bigint DEFAULT nextval('e_seq'::regclass) NOT NULL 	
+						, "points"				int DEFAULT 10
+						, "q_text_md"			text	
+						, "q_ans_json"			text	
+						, "explanation_md"		text	
+						, "created_by_user_id"	char varying (40) 
+						, "updated" 			timestamp  										
+						, "created" 			timestamp default current_timestamp not null 
+					)
+				```,
+				```
+					CREATE OR REPLACE function e_question_upd()
+					RETURNS trigger AS 
+					$BODY$
+					BEGIN
+					  NEW.updated := current_timestamp;
+					  RETURN NEW;
+					END
+					$BODY$
+					LANGUAGE 'plpgsql'
+				```,
+				```
+					CREATE TRIGGER e_question_trig
+					BEFORE update ON "e_question"
+					FOR EACH ROW
+					EXECUTE PROCEDURE e_question_upd()
+				```,
+				]
+				
+		}
+		, {
+			TableName        : "e_user_ans_question"
+			DDL              : [ ```
+					create table "e_user_ans_question"  (
+						  "id"					char varying (40) DEFAULT uuid_generate_v4() not null primary key
+						, "user_id"				char varying (40) 	
+						, "course_id"			char varying (40) 	
+						, "question_id"			char varying (40) 	
+						, "answer"				text
+						, "score"				int default 0
+						, "correct"				char varying (10)
+						, "answered_at"			timestamp  										
+						, "updated" 			timestamp  										
+						, "created" 			timestamp default current_timestamp not null 
+					)
+				```,
+				```
+					CREATE OR REPLACE function e_user_ans_question_upd()
+					RETURNS trigger AS 
+					$BODY$
+					BEGIN
+					  NEW.updated := current_timestamp;
+					  RETURN NEW;
+					END
+					$BODY$
+					LANGUAGE 'plpgsql'
+				```,
+				```
+					CREATE TRIGGER e_user_ans_question_trig
+					BEFORE update ON "e_user_ans_question"
+					FOR EACH ROW
+					EXECUTE PROCEDURE e_user_ans_question_upd()
+				```,
+				]
+				
+		}
+	]
+}

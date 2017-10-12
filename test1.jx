@@ -1,0 +1,66 @@
+{
+	Tables: [
+		{
+			TableName        : "t_knobs"
+			TableColumnsName : [
+				{
+					ColumnName      : "id"
+					ColumnType      : "char varying(40)"
+					ColumnDefault   : "'x'"
+					ColumnOpts   	: "not null primary key"
+				}
+				{
+					ColumnName      : "start_vm_if_x_min"
+					ColumnType      : "bigint"
+					ColumnDefault   : "2"
+					ColumnOpts   	: "not null"
+				}
+			],
+			DDL              : [ ```
+					CREATE TABLE "t_knobs" (
+						  "id"					char varying (40) DEFAULT 'x' not null primary key
+						, "start_vm_if_x_min"	bigint default 2 not null
+						, "idle_for_x_min"		bigint default 30 not null
+						, "updated" 			timestamp 	
+					) 
+				```,
+				```
+					CREATE INDEX "t_knobs_p1" on "t_knobs" ( "start_vm_if_x_min" )
+				```,
+				```
+					CREATE INDEX "t_knobs_p2" on "t_knobs" ( "idel_for_x_min" )
+				```,
+				]
+			AlterDDL          : [ ```
+					alter table "t_knobs" add column "id"					char varying (40) DEFAULT 'x' not null primary key
+				```,
+				```
+					alter table "t_knobs" add column "start_vm_if_x_min"	bigint default 2 not null
+				```,
+				```
+					alter table "t_knobs" add column "idle_for_x_min"		bigint default 30 not null
+				```,
+				```
+					alter table "t_knobs" add column "updated" 				timestamp 	
+				```,
+				```
+					CREATE INDEX "t_knobs_p1" on "t_knobs" ( "start_vm_if_x_min" )
+				```,
+				```
+					CREATE INDEX "t_knobs_p2" on "t_knobs" ( "idel_for_x_min" )
+				```,
+				]
+			Data          : [
+				]
+				
+		}
+	]
+//type TableColumnsType struct {
+//	ColumnName      string
+//	ColumnType      string
+//	ColumnLen       int
+//	ColumnPrecision int
+//	ColumnDefault   string
+//	ColumnOpts   	string
+//}
+}

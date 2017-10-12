@@ -1,0 +1,214 @@
+
+/*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+insert into "e_course" ( "xrs_no", "title", "user_id" ) values ( '1001', 'An Introduction to Programming in Go (golang)', '1' );
+
+
+
+
+CREATE OR REPLACE FUNCTION e_insert_block_v1( p_xrs_no varchar, p_block_id varchar, p_title varchar, opt_position_seq bigint ) RETURNS varchar AS $$
+DECLARE
+    l_course_id char varying(40);
+    l_position_seq bigint;
+    l_error char varying(40);
+    l_id char varying(40);
+    l_data char varying(180);
+BEGIN
+    l_data = '{"status":"success"}';
+    l_error = 'ok';
+	
+	
+	
+	BEGIN
+		select t1."id"
+			into l_course_id
+			from "e_course" as t1
+			where t1."xrs_no" = p_xrs_no
+			;
+	EXCEPTION
+		WHEN others THEN 
+			l_data = '{"status":"error","msg":"Did not find xrs_no='||xrs_no||', no such course"}';
+			l_error = 'err1';
+	END;
+
+	IF opt_position_seq is null THEN
+		BEGIN
+			IF p_block_id is not null THEN
+				select max("position_seq")+1 into l_position_seq from "e_block" where "id" = p_block_id ;
+			ELSE 
+				l_position_seq = 1;
+			END IF;
+		EXCEPTION
+			WHEN others THEN 
+				l_position_seq = 1;
+		END;
+	ELSE
+		l_position_seq = opt_position_seq;
+	END IF;
+	IF l_position_seq is null THEN
+		l_position_seq = 1;
+	END IF;
+		
+
+	IF l_error = 'ok' THEN
+		IF p_block_id is null THEN
+			insert into "e_block" ( 
+				"course_id",
+				"position_seq",
+				"title"
+			) values (
+				l_course_id,
+				l_position_seq,
+				p_title
+			) returning "id" into l_id;
+		ELSE
+			l_id = p_block_id;
+			insert into "e_block" ( 
+				"id",
+				"course_id",
+				"position_seq",
+				"title"
+			) values (
+				p_block_id,
+				l_course_id,
+				l_position_seq,
+				p_title
+			);
+		END IF;
+		l_data = '{"status":"success","id":"'||l_id||'","course_id":"'||l_course_id||'"}';
+	END IF;
+
+	RETURN l_data;
+
+END;
+$$ LANGUAGE plpgsql;
+
+select e_insert_block_v1( '1001', '12', 'test of 12', NULL );
+
+
+CREATE OR REPLACE FUNCTION e_insert_section_v1( p_xrs_no varchar, p_block_id varchar, p_section_id varchar, p_title varchar, opt_position_seq bigint,
+	p_section_type varchar, p_video_url_json varchar, p_text_info_md varchar, p_code_sample_md varchar ) RETURNS varchar AS $$
+DECLARE
+    l_course_id char varying(40);
+    l_position_seq bigint;
+    l_error char varying(40);
+    l_id char varying(40);
+    l_data char varying(180);
+BEGIN
+    l_data = '{"status":"success"}';
+    l_error = 'ok';
+
+	
+	
+	
+
+	BEGIN
+		select t1."id"
+			into l_course_id
+			from "e_course" as t1
+			where t1."xrs_no" = p_xrs_no
+			;
+	EXCEPTION
+		WHEN others THEN 
+			l_data = '{"status":"error","msg":"Did not find xrs_no='||xrs_no||', no such course"}';
+			l_error = 'err1';
+	END;
+
+	IF opt_position_seq is null THEN
+		BEGIN
+			IF p_section_id is not null THEN
+				select max("position_seq")+1 into l_position_seq from "e_section" where "id" = p_section_id ;
+			ELSE 
+				l_position_seq = 1;
+			END IF;
+		EXCEPTION
+			WHEN others THEN 
+				l_position_seq = 1;
+		END;
+	ELSE
+		l_position_seq = opt_position_seq;
+	END IF;
+	IF l_position_seq is null THEN
+		l_position_seq = 1;
+	END IF;
+
+	IF l_error = 'ok' THEN
+		IF p_section_id is null THEN
+			insert into "e_section" ( 
+				  "course_id"
+				, "block_id"			
+				, "position_seq"		
+				, "title"				
+				, "section_type"		
+				, "video_url_json"		
+				, "text_info_md"		
+				, "code_sample_md"		
+			) values (
+				  l_course_id
+				, p_block_id
+				, l_position_seq
+				, p_title
+				, p_section_type
+				, p_video_url_json
+				, p_text_info_md
+				, p_code_sample_md
+			) returning "id" into l_id;
+		ELSE
+			l_id = p_section_id;
+			insert into "e_section" ( 
+				  "id"
+				, "course_id"
+				, "block_id"			
+				, "position_seq"		
+				, "title"				
+				, "section_type"		
+				, "video_url_json"		
+				, "text_info_md"		
+				, "code_sample_md"		
+			) values (
+				  p_section_id
+				, l_course_id
+				, p_block_id
+				, l_position_seq
+				, p_title
+				, p_section_type
+				, p_video_url_json
+				, p_text_info_md
+				, p_code_sample_md
+			);
+		END IF;
+		update "e_block"
+			set "n_section" = ( select count(1) from "e_section" where "block_id" = p_block_id )
+			where "id" = p_block_id
+			;
+		l_data = '{"status":"success","id":"'||l_id||'","course_id":"'||l_course_id||'"}';
+	END IF;
+
+	RETURN l_data;
+
+END;
+$$ LANGUAGE plpgsql;
+
+
+select e_insert_section_v1( '1001', '12', '1201', 'title section 12 # 1', NULL, 'video', '{"url":"http://localhost/video/1201.mp4"}', NULL, NULL );
+select e_insert_section_v1( '1001', '12', '1202', 'title section 12 # 2', NULL, 'video', '{"url":"http://localhost/video/1202.mp4"}', NULL, NULL );
+
+*/
